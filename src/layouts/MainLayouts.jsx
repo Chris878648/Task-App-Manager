@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Layout, Menu, Button, Modal, Form, Input, Select, DatePicker, message } from 'antd';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import './MainLayout.css';
 
 const { Header, Sider, Content } = Layout;
@@ -9,6 +9,7 @@ const { Option } = Select;
 const MainLayout = ({ children }) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [form] = Form.useForm();
+  const navigate = useNavigate();
 
   const showModal = () => {
     setIsModalVisible(true);
@@ -17,10 +18,12 @@ const MainLayout = ({ children }) => {
   const handleOk = async () => {
     try {
       const values = await form.validateFields();
+      const token = localStorage.getItem('token');
       const response = await fetch('http://localhost:3001/tasks', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(values),
       });
@@ -44,6 +47,27 @@ const MainLayout = ({ children }) => {
     form.resetFields();
   };
 
+  const handleLogout = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:3001/logout', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        localStorage.removeItem('token');
+        navigate('/login');
+      } else {
+        console.error('Failed to logout');
+      }
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
+  };
+
   return (
     <Layout className="main-layout">
       <Sider className="main-sider">
@@ -59,6 +83,9 @@ const MainLayout = ({ children }) => {
             <Link to="/perfil">Perfil</Link>
           </Menu.Item>
         </Menu>
+        <Button className="logout-button" type="primary" onClick={handleLogout}>
+          Logout
+        </Button>
       </Sider>
       <Layout>
         <Header className="main-header">

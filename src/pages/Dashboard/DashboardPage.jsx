@@ -7,7 +7,12 @@ const DashboardPage = () => {
   useEffect(() => {
     const fetchTasks = async () => {
       try {
-        const response = await fetch('http://localhost:3001/get_tasks');
+        const token = localStorage.getItem('token');
+        const response = await fetch('http://localhost:3001/get_tasks', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
         if (response.ok) {
           const tasksData = await response.json();
           setTasks(tasksData);

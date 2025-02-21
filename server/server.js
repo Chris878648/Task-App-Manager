@@ -24,7 +24,7 @@ const Api = express();
 const port = 3001;
 
 Api.use(express.json());
-Api.use(cors());
+Api.use(cors()); // Habilitar CORS
 
 const SECRET_KEY = 'HKAHS22SJX4223DXE'; 
 
@@ -54,10 +54,7 @@ Api.post('/register', async (req, res) => {
       password: hashedPassword,
       last_login: ""
     });
-
-    const userId = docRef.id;
-
-    res.status(200).json({ message: `User added with ID: ${userId}`, userId });
+    res.status(200).json({ message: `User added with ID: ${docRef.id}` });
   } catch (error) {
     res.status(500).json({ message: 'Error adding user: ' + error.message });
   }
@@ -76,14 +73,13 @@ Api.post('/login', async (req, res) => {
 
     const userDoc = querySnapshot.docs[0];
     const user = userDoc.data();
-    const userId = userDoc.id;
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       return res.status(400).json({ message: 'Invalid username or password' });
     }
 
-    const token = jwt.sign({ userId }, SECRET_KEY, { expiresIn: '10m' });
+    const token = jwt.sign({ username: user.username }, SECRET_KEY, { expiresIn: '10m' });
 
     await updateDoc(doc(db, 'Users', userDoc.id), {
       last_login: token
@@ -105,7 +101,7 @@ Api.post('/tasks', authenticateToken, async (req, res) => {
       time,
       status,
       category,
-      userId: req.user.userId 
+      username: req.user.username // Asociar la tarea con el usuario autenticado
     });
     res.status(200).json({ message: `Task added with ID: ${docRef.id}` });
   } catch (error) {
@@ -116,7 +112,7 @@ Api.post('/tasks', authenticateToken, async (req, res) => {
 // Función para obtener todas las tareas del usuario autenticado
 Api.get('/get_tasks', authenticateToken, async (req, res) => {
   try {
-    const q = query(collection(db, 'Tasks'), where('userId', '==', req.user.userId));
+    const q = query(collection(db, 'Tasks'), where('username', '==', req.user.username));
     const querySnapshot = await getDocs(q);
     const tasks = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     res.status(200).json(tasks);
@@ -138,7 +134,7 @@ Api.post('/logout', authenticateToken, async (req, res) => {
     const userDoc = querySnapshot.docs[0];
 
     await updateDoc(doc(db, 'Users', userDoc.id), {
-      last_login: "" // Borrar token
+      last_login: "" // Borrar el token
     });
 
     res.status(200).json({ message: 'Logged out successfully' });

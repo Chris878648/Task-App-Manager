@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const cors = require('cors');
 const { initializeApp } = require('firebase/app');
-const { getFirestore, collection, addDoc, getDocs, query, where, updateDoc, doc } = require('firebase/firestore');
+const { getFirestore, collection, addDoc, getDocs, query, where, updateDoc, doc, getDoc } = require('firebase/firestore');
 
 // Tu configuración de Firebase
 const firebaseConfig = {
@@ -54,7 +54,10 @@ Api.post('/register', async (req, res) => {
       password: hashedPassword,
       last_login: ""
     });
-    res.status(200).json({ message: `User added with ID: ${docRef.id}` });
+
+    const userId = docRef.id;
+
+    res.status(200).json({ message: `User added with ID: ${userId}`, userId });
   } catch (error) {
     res.status(500).json({ message: 'Error adding user: ' + error.message });
   }
@@ -73,19 +76,20 @@ Api.post('/login', async (req, res) => {
 
     const userDoc = querySnapshot.docs[0];
     const user = userDoc.data();
+    const userId = userDoc.id;
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       return res.status(400).json({ message: 'Invalid username or password' });
     }
 
-    const token = jwt.sign({ username: user.username }, SECRET_KEY, { expiresIn: '10m' });
-
+    const token = jwt.sign({ userId, email: user.email  }, SECRET_KEY, { expiresIn: '10m' });
+    
     await updateDoc(doc(db, 'Users', userDoc.id), {
       last_login: token
     });
 
-    res.status(200).json({ token });
+    res.status(200).json({ token, email: user.email });
   } catch (error) {
     res.status(500).json({ message: 'Error logging in: ' + error.message });
   }
@@ -101,7 +105,8 @@ Api.post('/tasks', authenticateToken, async (req, res) => {
       time,
       status,
       category,
-      username: req.user.username // Asociar la tarea con el usuario autenticado
+      email: req.user.email, // Asociar la tarea con el correo electrónico del usuario autenticado
+      userId: req.user.userId // Asociar la tarea con el ID del usuario autenticado
     });
     res.status(200).json({ message: `Task added with ID: ${docRef.id}` });
   } catch (error) {
@@ -109,10 +114,21 @@ Api.post('/tasks', authenticateToken, async (req, res) => {
   }
 });
 
+// Función para obtener todos los usuarios
+Api.get('/get_users', authenticateToken, async (req, res) => {
+  try {
+    const querySnapshot = await getDocs(collection(db, 'Users'));
+    const users = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    res.status(200).json(users);
+  } catch (error) {
+    res.status(500).json({ message: 'Error getting users: ' + error.message });
+  }
+});
+
 // Función para obtener todas las tareas del usuario autenticado
 Api.get('/get_tasks', authenticateToken, async (req, res) => {
   try {
-    const q = query(collection(db, 'Tasks'), where('username', '==', req.user.username));
+    const q = query(collection(db, 'Tasks'), where('userId', '==', req.user.userId));
     const querySnapshot = await getDocs(q);
     const tasks = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     res.status(200).json(tasks);
@@ -121,10 +137,138 @@ Api.get('/get_tasks', authenticateToken, async (req, res) => {
   }
 });
 
+// Función para crear un grupo
+Api.post('/groups', authenticateToken, async (req, res) => {
+  const { name, userEmails } = req.body;
+  try {
+    const groupRef = await addDoc(collection(db, 'Groups'), {
+      name,
+      ownerId: req.user.userId,
+      userEmails
+    });
+    res.status(200).json({ message: `Group created with ID: ${groupRef.id}` });
+  } catch (error) {
+    res.status(500).json({ message: 'Error creating group: ' + error.message });
+  }
+});
+
+// Función para obtener todos los grupos del usuario autenticado
+Api.get('/get_groups', authenticateToken, async (req, res) => {
+  try {
+    const q = query(collection(db, 'Groups'), where('ownerId', '==', req.user.userId));
+    const querySnapshot = await getDocs(q);
+    const groups = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    res.status(200).json(groups);
+  } catch (error) {
+    res.status(500).json({ message: 'Error getting groups: ' + error.message });
+  }
+});
+
+// Función para crear una tarea en un grupo
+Api.post('/groups/:groupId/tasks', authenticateToken, async (req, res) => {
+  const { groupId } = req.params;
+  const { name, description, time, status, category, assignedTo } = req.body;
+  try {
+    const groupDocRef = doc(db, 'Groups', groupId);
+    const groupDoc = await getDoc(groupDocRef);
+    if (!groupDoc.exists()) {
+      return res.status(404).json({ message: 'Group not found' });
+    }
+
+    const group = groupDoc.data();
+    if (group.ownerId !== req.user.userId) {
+      return res.status(403).json({ message: 'Only the group owner can create tasks' });
+    }
+
+    const taskRef = await addDoc(collection(db, 'Tasks'), {
+      name,
+      description,
+      time,
+      status,
+      category,
+      assignedTo,
+      groupId
+    });
+    res.status(200).json({ message: `Task created with ID: ${taskRef.id}` });
+  } catch (error) {
+    res.status(500).json({ message: 'Error creating task: ' + error.message });
+  }
+});
+
+// Función para obtener todas las tareas de un grupo específico
+Api.get('/groups/:groupId/tasks', authenticateToken, async (req, res) => {
+  const { groupId } = req.params;
+  try {
+    const q = query(collection(db, 'Tasks'), where('groupId', '==', groupId));
+    const querySnapshot = await getDocs(q);
+    const tasks = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    res.status(200).json(tasks);
+  } catch (error) {
+    res.status(500).json({ message: 'Error getting tasks: ' + error.message });
+  }
+});
+
+
+// Función para obtener todos los grupos del usuario autenticado por correo electrónico
+Api.get('/get_groups_byuser', authenticateToken, async (req, res) => {
+  try {
+    const userEmail = req.user.email; // Obtener el correo electrónico del usuario autenticado
+    if (!userEmail) {
+      return res.status(400).json({ message: 'User email is undefined' });
+    }
+    const q = query(collection(db, 'Groups'), where('userEmails', 'array-contains', userEmail));
+    const querySnapshot = await getDocs(q);
+    const groups = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    res.status(200).json(groups);
+  } catch (error) {
+    res.status(500).json({ message: 'Error getting groups: ' + error.message });
+  }
+});
+
+// Función para obtener todas las tareas del usuario autenticado por correo electrónico
+Api.get('/get_tasks_byuser', authenticateToken, async (req, res) => {
+  try {
+    const userEmail = req.user.email; // Obtener el correo electrónico del usuario autenticado
+    if (!userEmail) {
+      return res.status(400).json({ message: 'User email is undefined' });
+    }
+    const q = query(collection(db, 'Tasks'), where('assignedTo', '==', userEmail));
+    const querySnapshot = await getDocs(q);
+    const tasks = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    res.status(200).json(tasks);
+  } catch (error) {
+    res.status(500).json({ message: 'Error getting tasks: ' + error.message });
+  }
+});
+
+// Funcion para modificar el estatus de las actividaddes que te asignaron
+Api.patch('/tasks/:taskId/status', authenticateToken, async (req, res) => {
+  const { taskId } = req.params;
+  const { status } = req.body;
+  try {
+    const taskDocRef = doc(db, 'Tasks', taskId);
+    const taskDoc = await getDoc(taskDocRef);
+    if (!taskDoc.exists()) {
+      return res.status(404).json({ message: 'Task not found' });
+    }
+
+    const task = taskDoc.data();
+    if (task.assignedTo !== req.user.email) { 
+      return res.status(403).json({ message: 'Only the assigned user can update the task status' });
+    }
+
+    await updateDoc(taskDocRef, { status });
+    res.status(200).json({ message: 'Task status updated successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating task status: ' + error.message });
+  }
+});
+
+
 // Función para hacer logout
 Api.post('/logout', authenticateToken, async (req, res) => {
   try {
-    const q = query(collection(db, 'Users'), where('username', '==', req.user.username));
+    const q = query(collection(db, 'Users'), where('userId', '==', req.user.userId));
     const querySnapshot = await getDocs(q);
 
     if (querySnapshot.empty) {

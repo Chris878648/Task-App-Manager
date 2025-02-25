@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Layout, Menu, Button, Modal, Form, Input, Select, DatePicker, message } from 'antd';
 import { Link, useNavigate } from 'react-router-dom';
 import './MainLayout.css';
@@ -7,15 +7,41 @@ const { Header, Sider, Content } = Layout;
 const { Option } = Select;
 
 const MainLayout = ({ children }) => {
-  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isTaskModalVisible, setIsTaskModalVisible] = useState(false);
+  const [isGroupModalVisible, setIsGroupModalVisible] = useState(false);
   const [form] = Form.useForm();
+  const [groupForm] = Form.useForm();
+  const [users, setUsers] = useState([]);
   const navigate = useNavigate();
 
-  const showModal = () => {
-    setIsModalVisible(true);
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('http://localhost:3001/get_users', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (response.ok) {
+          const usersData = await response.json();
+          setUsers(usersData);
+        } else {
+          console.error('Failed to fetch users');
+        }
+      } catch (error) {
+        console.error('Error fetching users:', error);
+      }
+    };
+
+    fetchUsers();
+  }, []);
+
+  const showTaskModal = () => {
+    setIsTaskModalVisible(true);
   };
 
-  const handleOk = async () => {
+  const handleTaskOk = async () => {
     try {
       const values = await form.validateFields();
       const token = localStorage.getItem('token');
@@ -30,7 +56,7 @@ const MainLayout = ({ children }) => {
 
       if (response.ok) {
         message.success('Task added successfully!');
-        setIsModalVisible(false);
+        setIsTaskModalVisible(false);
         form.resetFields();
       } else {
         const errorData = await response.json();
@@ -42,9 +68,45 @@ const MainLayout = ({ children }) => {
     }
   };
 
-  const handleCancel = () => {
-    setIsModalVisible(false);
+  const handleTaskCancel = () => {
+    setIsTaskModalVisible(false);
     form.resetFields();
+  };
+
+  const showGroupModal = () => {
+    setIsGroupModalVisible(true);
+  };
+
+  const handleGroupOk = async () => {
+    try {
+      const values = await groupForm.validateFields();
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:3001/groups', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(values),
+      });
+
+      if (response.ok) {
+        message.success('Group created successfully!');
+        setIsGroupModalVisible(false);
+        groupForm.resetFields();
+      } else {
+        const errorData = await response.json();
+        message.error(`Failed to create group: ${errorData.message}`);
+      }
+    } catch (error) {
+      console.log('Validation failed:', error);
+      message.error('Failed to create group');
+    }
+  };
+
+  const handleGroupCancel = () => {
+    setIsGroupModalVisible(false);
+    groupForm.resetFields();
   };
 
   const handleLogout = async () => {
@@ -83,6 +145,12 @@ const MainLayout = ({ children }) => {
             <Link to="/perfil">Perfil</Link>
           </Menu.Item>
         </Menu>
+        <Button className="floating-button" type="primary" onClick={showTaskModal}>
+          Add Task
+        </Button>
+        <Button className="floating-button" type="primary" onClick={showGroupModal}>
+          Create Group
+        </Button>
         <Button className="logout-button" type="primary" onClick={handleLogout}>
           Logout
         </Button>
@@ -96,14 +164,11 @@ const MainLayout = ({ children }) => {
             {children}
           </div>
         </Content>
-        <Button className="floating-button" type="primary" onClick={showModal}>
-          Add Task
-        </Button>
         <Modal
           title="Add Task"
-          visible={isModalVisible}
-          onOk={handleOk}
-          onCancel={handleCancel}
+          visible={isTaskModalVisible}
+          onOk={handleTaskOk}
+          onCancel={handleTaskCancel}
           okButtonProps={{ className: 'modal-ok-button' }}
           cancelButtonProps={{ className: 'modal-cancel-button' }}
         >
@@ -127,6 +192,29 @@ const MainLayout = ({ children }) => {
             </Form.Item>
             <Form.Item name="category" label="Category" rules={[{ required: true, message: 'Please input the category!' }]}>
               <Input />
+            </Form.Item>
+          </Form>
+        </Modal>
+        <Modal
+          title="Create Group"
+          visible={isGroupModalVisible}
+          onOk={handleGroupOk}
+          onCancel={handleGroupCancel}
+          okButtonProps={{ className: 'modal-ok-button' }}
+          cancelButtonProps={{ className: 'modal-cancel-button' }}
+        >
+          <Form form={groupForm} layout="vertical">
+            <Form.Item name="name" label="Group Name" rules={[{ required: true, message: 'Please input the group name!' }]}>
+              <Input />
+            </Form.Item>
+            <Form.Item name="userEmails" label="Add Users" rules={[{ required: true, message: 'Please select users!' }]}>
+              <Select mode="multiple" placeholder="Select users">
+                {users.map(user => (
+                  <Option key={user.email} value={user.email}>
+                    {user.email}
+                  </Option>
+                ))}
+              </Select>
             </Form.Item>
           </Form>
         </Modal>

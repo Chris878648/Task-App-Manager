@@ -1,9 +1,15 @@
 .main-layout {
   min-height: 100vh;
+  background-color: #f5f5f5; /* Fondo gris claro */
 }
 
 .main-sider {
-  background-color: #4CAF50 !important; 
+  background-color: #2c3e50 !important; /* Fondo azul oscuro */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1); /* Sombra lateral */
 }
 
 .logo {
@@ -14,111 +20,193 @@
 }
 
 .main-menu {
-  background-color: #4CAF50 !important; 
+  background-color: transparent !important; /* Fondo transparente */
+  flex-grow: 1; /* Permitir que el menú crezca para ocupar el espacio disponible */
 }
 
 .ant-menu-dark.ant-menu-inline .ant-menu-item {
-  color: #ffffff; 
+  color: #ffffff; /* Texto blanco */
   border-radius: 8px;
   margin: 8px 0;
+  transition: all 0.3s ease; /* Transición suave */
 }
 
 .ant-menu-dark.ant-menu-inline .ant-menu-item:hover {
-  background-color: #81C784; 
+  background-color: #34495e !important; /* Fondo azul grisáceo */
 }
 
 .ant-menu-dark.ant-menu-inline .ant-menu-item-selected {
-  background-color: #388E3C;
+  background-color: #1abc9c !important; /* Fondo verde turquesa */
+  color: #ffffff !important; /* Texto blanco */
 }
 
 .main-header {
-  background-color: #388E3C;
-  color: #ffffff; 
-  padding: 0 20px;
+  background-color: #ffffff; /* Fondo blanco */
+  color: #2c3e50; /* Texto azul oscuro */
+  padding: 0 24px;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* Sombra inferior */
 }
 
 .header-title {
-  color: #ffffff; 
+  color: #2c3e50; /* Texto azul oscuro */
   margin: 0;
-  padding: 16px;
   font-size: 24px;
+  font-weight: 600;
 }
 
 .main-content {
-  margin: 16px;
-  background-color: #E8F5E9; 
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  margin: 24px;
+  background-color: #ffffff; /* Fondo blanco */
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
 }
 
 .content-inner {
   padding: 24px;
-  background-color: #ffffff; 
-  border-radius: 8px;
-  min-height: 100%;
-  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+  background-color: #ffffff; /* Fondo blanco */
+  min-height: 360px;
 }
 
+/* Botones flotantes cuadrados */
 .floating-button {
-  position: fixed;
-  bottom: 40px;
-  right: 50px;
-  background-color: #4CAF50; 
-  border-color: #4CAF50;
-  color: #ffffff; 
-  border-radius: 50%;
-  width: 60px;
-  height: 60px;
+  background-color: #1abc9c; /* Botón verde turquesa */
+  border-color: #1abc9c;
+  color: #ffffff; /* Texto blanco */
+  border-radius: 8px; /* Bordes redondeados suaves */
+  width: 150px; /* Ancho fijo */
+  height: 40px; /* Altura fija */
   display: flex;
   align-items: center;
   justify-content: center;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  margin: 10px 16px; /* Espaciado entre botones */
+  transition: all 0.3s ease; /* Transición suave */
 }
 
 .floating-button:hover {
-  background-color: #81C784 !important; 
-  border-color: #81C784;
+  background-color: #16a085 !important; /* Botón verde turquesa más oscuro */
+  border-color: #16a085;
+  transform: scale(1.05); /* Efecto de escala más sutil */
 }
 
 .modal-ok-button {
-  background-color: #4CAF50; 
-  border-color: #4CAF50;
-  color: #ffffff;
+  background-color: #1abc9c; /* Botón verde turquesa */
+  border-color: #1abc9c;
+  color: #ffffff; /* Texto blanco */
+  transition: all 0.3s ease; /* Transición suave */
 }
 
 .modal-ok-button:hover {
-  background-color: #81C784 !important;
-  border-color: #81C784;
+  background-color: #16a085; /* Botón verde turquesa más oscuro */
+  border-color: #16a085;
 }
 
 .modal-cancel-button {
-  background-color: #f44336; 
-  border-color: #f44336;
-  color: #ffffff;
+  background-color: #e74c3c; /* Botón rojo */
+  border-color: #e74c3c;
+  color: #ffffff; /* Texto blanco */
+  transition: all 0.3s ease; /* Transición suave */
 }
 
 .modal-cancel-button:hover {
-  background-color: #e57373 !important; 
-  border-color: #e57373;
+  background-color: #c0392b !important; /* Botón rojo más oscuro */
+  border-color: #c0392b !important;
 }
 
 .logout-button {
-  margin: 16px;
-  background-color: #294f24; 
-  border-color: #294f24;
-  color: #ffffff; 
   position: absolute;
   bottom: 16px;
-  width: calc(100% - 32px); 
+  width: calc(100% - 32px); /* Ajustar el ancho del botón */
   margin: 0 16px;
-
-   
+  background-color: #34495e; /* Botón azul grisáceo */
+  border-color: #34495e;
+  color: #ffffff; /* Texto blanco */
+  border-radius: 8px; /* Bordes redondeados suaves */
+  transition: all 0.3s ease; /* Transición suave */
 }
 
 .logout-button:hover {
-  background-color: #3d7536 !important; 
-  border-color: #3d7536 !important;
+  background-color: #2c3e50 !important; /* Botón azul más oscuro */
+  border-color: #2c3e50 !important;
+}
+
+/* Estilos para los modales */
+.ant-modal-header {
+  background-color: #1abc9c; /* Fondo verde turquesa */
+  color: #ffffff; /* Texto blanco */
+  border-radius: 12px 12px 0 0;
+}
+
+.ant-modal-title {
+  color: #ffffff; /* Texto blanco */
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.ant-modal-close {
+  color: #ffffff; /* Texto blanco */
+}
+
+.ant-modal-close:hover {
+  color: #e0e0e0; /* Texto gris claro */
+}
+
+.ant-modal-content {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.ant-modal-footer {
+  border-top: 1px solid #e0e0e0; /* Borde gris claro */
+  padding: 16px 24px;
+  text-align: right;
+}
+
+/* Estilos para los inputs y selects */
+.ant-input, .ant-select-selector, .ant-picker {
+  border-radius: 8px !important;
+  border: 1px solid #e0e0e0 !important; /* Borde gris claro */
+}
+
+.ant-input:focus, .ant-select-selector:focus, .ant-picker:focus {
+  border-color: #1abc9c !important; /* Borde verde turquesa */
+  box-shadow: 0 0 0 2px rgba(26, 188, 156, 0.2) !important; /* Sombra verde */
+}
+
+.ant-input:hover, .ant-select-selector:hover, .ant-picker:hover {
+  border-color: #1abc9c !important; /* Borde verde turquesa */
+}
+
+/* Estilos para los botones dentro de los modales */
+.ant-modal-footer .ant-btn {
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-weight: 500;
+}
+
+.ant-modal-footer .ant-btn-primary {
+  background-color: #1abc9c; /* Botón verde turquesa */
+  border-color: #1abc9c;
+  color: #ffffff; /* Texto blanco */
+}
+
+.ant-modal-footer .ant-btn-primary:hover {
+  background-color: #16a085; /* Botón verde turquesa más oscuro */
+  border-color: #16a085;
+}
+
+.ant-modal-footer .ant-btn-default {
+  background-color: #ffffff; /* Botón blanco */
+  border-color: #e0e0e0; /* Borde gris claro */
+  color: #2c3e50; /* Texto azul oscuro */
+}
+
+.ant-modal-footer .ant-btn-default:hover {
+  background-color: #f5f5f5; /* Fondo gris claro */
+  border-color: #1abc9c; /* Borde verde turquesa */
+  color: #1abc9c; /* Texto verde turquesa */
 }

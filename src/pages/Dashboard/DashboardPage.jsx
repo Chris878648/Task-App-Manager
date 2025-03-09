@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Button, Modal, Form, Input, Select, DatePicker, message } from "antd";
+import { Button, Modal, Form, Input, Select, DatePicker, message, Spin } from "antd";
 import "./DashboardPage.css";
 import {
   getTasks,
@@ -9,7 +9,9 @@ import {
   getGroupTasks,
   updateTaskStatus,
   createGroupTask,
-} from "../../services/taskService"; 
+} from "../../services/taskService";
+import { toast } from 'react-toastify';
+
 
 const { Option } = Select;
 
@@ -20,70 +22,96 @@ const DashboardPage = () => {
   const [userGroups, setUserGroups] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [form] = Form.useForm();
 
   const userEmail = localStorage.getItem("email");
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const tasksData = await getTasks();
-        const groupsData = await getGroups();
-        const userTasksData = await getTasksByUser();
-        const userGroupsData = await getGroupsByUser();
+  // Función para obtener todos los datos
+  const fetchData = async (isInitial = false) => {
+    if (isInitial) {
+      setLoading(true);
+    }
 
-        setTasks(tasksData);
-        setGroups(groupsData);
-        setUserTasks(userTasksData);
-        setUserGroups(userGroupsData);
-      } catch (error) {
-        console.error("Error fetching data:", error);
+    try {
+      const [tasksData, groupsData, userTasksData, userGroupsData] =
+        await Promise.all([
+          getTasks(),
+          getGroups(),
+          getTasksByUser(),
+          getGroupsByUser(),
+        ]);
+
+      setTasks((prevTasks) => {
+        if (JSON.stringify(prevTasks) !== JSON.stringify(tasksData)) {
+          return tasksData;
+        }
+        return prevTasks;
+      });
+
+      setGroups((prevGroups) => {
+        if (JSON.stringify(prevGroups) !== JSON.stringify(groupsData)) {
+          return groupsData;
+        }
+        return prevGroups;
+      });
+
+      setUserTasks((prevUserTasks) => {
+        if (JSON.stringify(prevUserTasks) !== JSON.stringify(userTasksData)) {
+          return userTasksData;
+        }
+        return prevUserTasks;
+      });
+
+      setUserGroups((prevUserGroups) => {
+        if (JSON.stringify(prevUserGroups) !== JSON.stringify(userGroupsData)) {
+          return userGroupsData;
+        }
+        return prevUserGroups;
+      });
+
+      const groupTasksPromises = groupsData.map((group) =>
+        getGroupTasks(group.id)
+      );
+      const groupTasksResults = await Promise.all(groupTasksPromises);
+      const allGroupTasks = groupTasksResults.flat();
+
+      setTasks((prevTasks) => {
+        const existingTaskIds = new Set(prevTasks.map((task) => task.id));
+        const newGroupTasks = allGroupTasks.filter(
+          (task) => !existingTaskIds.has(task.id)
+        );
+
+        if (newGroupTasks.length > 0) {
+          return [...prevTasks, ...newGroupTasks];
+        }
+        return prevTasks;
+      });
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      if (isInitial) {
+        message.error("Failed to fetch data");
       }
-    };
+    } finally {
+      if (isInitial) {
+        setLoading(false);
+        setIsInitialLoad(false);
+      }
+    }
+  };
 
-    fetchData();
+  useEffect(() => {
+    fetchData(true);
 
-    const intervalId = setInterval(fetchData, 5000);
+    const intervalId = setInterval(() => fetchData(false), 3000);
+
     return () => clearInterval(intervalId);
   }, []);
-
-  useEffect(() => {
-    const fetchGroupTasksData = async () => {
-      try {
-        for (const group of groups) {
-          const groupTasks = await getGroupTasks(group.id);
-          setTasks((prevTasks) => [...prevTasks, ...groupTasks]);
-        }
-      } catch (error) {
-        console.error("Error fetching group tasks:", error);
-      }
-    };
-
-    if (groups.length > 0) {
-      fetchGroupTasksData();
-    }
-  }, [groups]);
-
-  const groupedTasks = tasks.reduce((acc, task) => {
-    if (!acc[task.status]) {
-      acc[task.status] = [];
-    }
-    acc[task.status].push(task);
-    return acc;
-  }, {});
-
-  const groupedUserTasks = userTasks.reduce((acc, task) => {
-    if (!acc[task.status]) {
-      acc[task.status] = [];
-    }
-    acc[task.status].push(task);
-    return acc;
-  }, {});
 
   const handleStatusChange = async (taskId, newStatus) => {
     try {
       await updateTaskStatus(taskId, newStatus);
-      
       setTasks((prevTasks) =>
         prevTasks.map((task) =>
           task.id === taskId ? { ...task, status: newStatus } : task
@@ -95,9 +123,12 @@ const DashboardPage = () => {
         )
       );
       message.success("Task status updated successfully!");
+      toast.success('Task status updated successfully!');
+
     } catch (error) {
       console.error("Error updating task status:", error);
       message.error("Error updating task status");
+      toast.error('Error updating task status');
     }
   };
 
@@ -109,12 +140,18 @@ const DashboardPage = () => {
   const handleOk = async () => {
     try {
       const values = await form.validateFields();
-      
       await createGroupTask(selectedGroup.id, values);
-      
       message.success("Task added successfully!");
+      toast.success('Task added successfully!');
       setIsModalVisible(false);
       form.resetFields();
+
+      // Recargar solo las tareas del grupo
+      const updatedGroupTasks = await getGroupTasks(selectedGroup.id);
+      setTasks((prevTasks) => [
+        ...prevTasks.filter((task) => task.groupId !== selectedGroup.id),
+        ...updatedGroupTasks,
+      ]);
     } catch (error) {
       console.log("Validation failed:", error);
       message.error("Failed to add task");
@@ -163,18 +200,38 @@ const DashboardPage = () => {
 
   return (
     <div className="dashboard-container">
-      {/* Group Tasks Section */}
-      <div className="section-container">
-        <h2>Group Tasks</h2>
-        {groups.map((group) => (
-          <div key={group.id}>
-            <h3>{group.name}</h3>
-            <Button type="primary" onClick={() => showModal(group)}>
-              Add Task
-            </Button>
+      {loading && isInitialLoad ? (
+        <Spin size="large" className="loading-spinner" />
+      ) : (
+        <>
+          {/* Group Tasks Section */}
+          <div className="section-container">
+            <h2>Group Tasks</h2>
+            {groups.map((group) => (
+              <div key={group.id}>
+                <h3>{group.name}</h3>
+                <Button type="primary" onClick={() => showModal(group)}>
+                  Add Task
+                </Button>
+                {renderKanbanBoard(
+                  tasks
+                    .filter((task) => task.groupId === group.id)
+                    .reduce((acc, task) => {
+                      if (!acc[task.status]) acc[task.status] = [];
+                      acc[task.status].push(task);
+                      return acc;
+                    }, {})
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* My Tasks Section */}
+          <div className="section-container">
+            <h2>My Tasks</h2>
             {renderKanbanBoard(
               tasks
-                .filter((task) => task.groupId === group.id)
+                .filter((task) => !task.groupId)
                 .reduce((acc, task) => {
                   if (!acc[task.status]) acc[task.status] = [];
                   acc[task.status].push(task);
@@ -182,98 +239,90 @@ const DashboardPage = () => {
                 }, {})
             )}
           </div>
-        ))}
-      </div>
 
-      {/* My Tasks Section */}
-      <div className="section-container">
-        <h2>My Tasks</h2>
-        {renderKanbanBoard(
-          tasks
-            .filter((task) => !task.groupId)
-            .reduce((acc, task) => {
-              if (!acc[task.status]) acc[task.status] = [];
-              acc[task.status].push(task);
-              return acc;
-            }, {})
-        )}
-      </div>
+          {/* Assigned Tasks Section */}
+          <div className="section-container">
+            <h2>Assigned Tasks</h2>
+            {renderKanbanBoard(
+              userTasks.reduce((acc, task) => {
+                if (!acc[task.status]) acc[task.status] = [];
+                acc[task.status].push(task);
+                return acc;
+              }, {})
+            )}
+          </div>
 
-      {/* Assigned Tasks Section */}
-      <div className="section-container">
-        <h2>Assigned Tasks</h2>
-        {renderKanbanBoard(groupedUserTasks)}
-      </div>
-
-      {/* Add Task Modal */}
-      <Modal
-        title="Add Task"
-        visible={isModalVisible}
-        onOk={handleOk}
-        onCancel={handleCancel}
-        okButtonProps={{ className: "modal-ok-button" }}
-        cancelButtonProps={{ className: "modal-cancel-button" }}
-      >
-        <Form form={form} layout="vertical">
-          <Form.Item
-            name="name"
-            label="Task Name"
-            rules={[{ required: true, message: "Please input the task name!" }]}
+          {/* Add Task Modal */}
+          <Modal
+            title="Add Task"
+            visible={isModalVisible}
+            onOk={handleOk}
+            onCancel={handleCancel}
+            okButtonProps={{ className: "modal-ok-button" }}
+            cancelButtonProps={{ className: "modal-cancel-button" }}
           >
-            <Input />
-          </Form.Item>
-          <Form.Item
-            name="description"
-            label="Description"
-            rules={[
-              { required: true, message: "Please input the description!" },
-            ]}
-          >
-            <Input.TextArea />
-          </Form.Item>
-          <Form.Item
-            name="time"
-            label="Time until finish / Remind me"
-            rules={[{ required: true, message: "Please select the time!" }]}
-          >
-            <DatePicker showTime />
-          </Form.Item>
-          <Form.Item
-            name="status"
-            label="Status"
-            rules={[{ required: true, message: "Please select the status!" }]}
-          >
-            <Select>
-              {statuses.map((status) => (
-                <Option key={status} value={status}>
-                  {status}
-                </Option>
-              ))}
-            </Select>
-          </Form.Item>
-          <Form.Item
-            name="category"
-            label="Category"
-            rules={[{ required: true, message: "Please input the category!" }]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item
-            name="assignedTo"
-            label="Assign to"
-            rules={[{ required: true, message: "Please select a user!" }]}
-          >
-            <Select placeholder="Select a user">
-              {selectedGroup &&
-                selectedGroup.userEmails.map((email) => (
-                  <Option key={email} value={email}>
-                    {email}
-                  </Option>
-                ))}
-            </Select>
-          </Form.Item>
-        </Form>
-      </Modal>
+            <Form form={form} layout="vertical">
+              <Form.Item
+                name="name"
+                label="Task Name"
+                rules={[{ required: true, message: "Please input the task name!" }]}
+              >
+                <Input />
+              </Form.Item>
+              <Form.Item
+                name="description"
+                label="Description"
+                rules={[
+                  { required: true, message: "Please input the description!" },
+                ]}
+              >
+                <Input.TextArea />
+              </Form.Item>
+              <Form.Item
+                name="time"
+                label="Time until finish / Remind me"
+                rules={[{ required: true, message: "Please select the time!" }]}
+              >
+                <DatePicker showTime />
+              </Form.Item>
+              <Form.Item
+                name="status"
+                label="Status"
+                rules={[{ required: true, message: "Please select the status!" }]}
+              >
+                <Select>
+                  {statuses.map((status) => (
+                    <Option key={status} value={status}>
+                      {status}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+              <Form.Item
+                name="category"
+                label="Category"
+                rules={[{ required: true, message: "Please input the category!" }]}
+              >
+                <Input />
+              </Form.Item>
+              <Form.Item
+                name="assignedTo"
+                label="Assign to"
+                rules={[{ required: true, message: "Please select a user!" }]}
+              >
+                <Select placeholder="Select a user">
+                  {selectedGroup &&
+                    selectedGroup.userEmails.map((email) => (
+                      <Option key={email} value={email}>
+                        {email}
+                      </Option>
+                    ))}
+                </Select>
+              </Form.Item>
+            </Form>
+          </Modal>
+        </>
+      )}
     </div>
   );
 };

@@ -4,6 +4,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { getUsers, createTask, createGroup } from '../services/taskService'; 
 import { logout } from '../services/authService';
 import './MainLayout.css';
+import { toast } from 'react-toastify';
+
 
 const { Header, Sider, Content } = Layout;
 const { Option } = Select;
@@ -42,11 +44,13 @@ const MainLayout = ({ children }) => {
       const values = await form.validateFields();
       await createTask(values); // Usar la función del servicio
       message.success('Task added successfully!');
+      toast.success('Task added successfully!');
       setIsTaskModalVisible(false);
       form.resetFields();
     } catch (error) {
       console.error('Error creating task:', error);
       message.error('Failed to add task');
+      toast.error('Failed to add task');
     }
   };
 
@@ -67,11 +71,13 @@ const MainLayout = ({ children }) => {
       const values = await groupForm.validateFields();
       await createGroup(values); // Usar la función del servicio
       message.success('Group created successfully!');
+      toast.success('Group created successfully!');
       setIsGroupModalVisible(false);
       groupForm.resetFields();
     } catch (error) {
       console.error('Error creating group:', error);
       message.error('Failed to create group');
+      toast.error('Failed to create group');
     }
   };
 

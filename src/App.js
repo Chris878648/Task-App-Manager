@@ -9,6 +9,10 @@ import AdminPage from './pages/AdminPage/AdminPage';
 
 import ProtectedRoute from '../src/ProtectedRoute';
 
+import { ToastContainer } from 'react-toastify'; 
+import 'react-toastify/dist/ReactToastify.css'; 
+
+
 
 function App() {
   return (
@@ -20,6 +24,17 @@ function App() {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/admin" element={ <ProtectedRoute><AdminPage /></ProtectedRoute>} />
       </Routes>
+       {/* Agrega ToastContainer */}
+        <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
     </Router>
   );
 }

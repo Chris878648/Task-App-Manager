@@ -3,6 +3,8 @@ import { getUsers, updateUser } from '../../services/taskService';
 import { logout } from '../../services/authService';
 import './AdminPage.css';
 import { useNavigate } from 'react-router-dom'; 
+import { toast } from 'react-toastify'; 
+
 
 const AdminPage = () => {
   const [users, setUsers] = useState([]);
@@ -32,12 +34,13 @@ const AdminPage = () => {
       const { id, username, email, type } = editingUser;
       const userData = { username, email, type };
       await updateUser(id, userData);
-      alert('User information updated successfully');
+      toast.success('User updated successfully!');
       setEditingUser(null);
       const updatedUsers = await getUsers();
       setUsers(updatedUsers);
     } catch (error) {
-      alert(error.message);
+        console.error('Error updating user:', error);
+        toast.error('Failed to update user');
     }
   };
 
@@ -46,7 +49,6 @@ const AdminPage = () => {
     setEditingUser({ ...editingUser, [name]: value });
   };
 
-  // Función para manejar el cierre de sesión
   const handleLogout = async () => {
     try {
       await logout();

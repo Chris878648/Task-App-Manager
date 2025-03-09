@@ -3,6 +3,8 @@ import { Form, Input, Button, Typography, message } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import '../LoginPage/LoginPage.css';
 import {register} from '../../services/authService';
+import { toast } from 'react-toastify';
+
 
 const { Title } = Typography;
 
@@ -16,16 +18,38 @@ const RegisterPage = () => {
     try {
       const data = await register(values.username, values.email, values.password);
       message.success('Registration successful!');
+      toast.success('Registration successful!');
+
       navigate('/login');
     } catch (error) {
       message.error(`Registration failed: ${error.message}`);
+      toast.error(`Registration failed: ${error.message}`);
     } finally {
       setLoading(false);
     }
   };
 
+  const handleGoHome = () => {
+    navigate('/');
+  };
+
+
   return (
     <div className="login-container">
+
+{}
+      <Button
+        type="default" 
+        onClick={handleGoHome} 
+        style={{
+          position: 'absolute', 
+          top: '24px', 
+          left: '24px', 
+        }}
+      >
+        Volver
+      </Button>
+
       <div className="login-content">
         <Title level={1} className="login-title">Register</Title>
         <Form name="register" onFinish={onFinish}>

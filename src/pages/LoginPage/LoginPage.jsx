@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Form, Input, Button, Typography, message } from 'antd';
+import { Form, Input, Button, Typography } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { login } from '../../services/authService';
+import { toast } from 'react-toastify';
 import './LoginPage.css';
 
 const { Title } = Typography;
@@ -15,25 +16,42 @@ const LoginPage = () => {
 
     try {
       const data = await login(values.email, values.password);
-      message.success('Login successful!');
+      toast.success('Login successful!');
       localStorage.setItem('token', data.token);
       localStorage.setItem('email', data.email);
 
-      // Redirigir basado en el type devuelto
       if (data.type === 1) {
         navigate('/dashboard');
       } else if (data.type === 2) {
         navigate('/admin');
       }
     } catch (error) {
-      message.error(`Login failed: ${error.message}`);
+      toast.error(`Login failed: ${error.message}`);
     } finally {
       setLoading(false);
     }
   };
 
+  // Función para redirigir a la página principal
+  const handleGoHome = () => {
+    navigate('/');
+  };
+
   return (
     <div className="login-container">
+      {}
+      <Button
+        type="default" 
+        onClick={handleGoHome} 
+        style={{
+          position: 'absolute', 
+          top: '24px', 
+          left: '24px', 
+        }}
+      >
+        Volver
+      </Button>
+
       <div className="login-content">
         <Title level={1} className="login-title">Login</Title>
         <Form name="login" onFinish={onFinish}>

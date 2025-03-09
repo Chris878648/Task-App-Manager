@@ -1,0 +1,134 @@
+.admin-container {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding: 24px;
+    background: #f0f8f0; /* Fondo verde claro */
+    min-height: 100vh;
+    font-family: 'Arial', sans-serif;
+  }
+  
+  .admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #ffffff; /* Fondo blanco */
+    border: 1px solid #d0e7d0; /* Borde verde claro */
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 128, 0, 0.1); /* Sombra verde suave */
+    overflow: hidden;
+  }
+  
+  .admin-table th,
+  .admin-table td {
+    padding: 16px;
+    text-align: left;
+    border-bottom: 1px solid #d0e7d0; /* Borde verde claro */
+  }
+  
+  .admin-table th {
+    background-color: #228b22; /* Verde forestal */
+    color: #ffffff; /* Texto blanco */
+    font-weight: 600;
+  }
+  
+  .admin-table tr:hover {
+    background-color: #f0f8f0; /* Fondo verde claro al pasar el ratón */
+  }
+  
+  .admin-table button {
+    padding: 8px 16px;
+    background-color: #228b22; /* Verde forestal */
+    border: none;
+    border-radius: 8px;
+    color: #ffffff; /* Texto blanco */
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .admin-table button:hover {
+    background-color: #1a6f1a; /* Verde más oscuro */
+  }
+  
+  .edit-form {
+    background: #ffffff; /* Fondo blanco */
+    border: 1px solid #d0e7d0; /* Borde verde claro */
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 4px 12px rgba(0, 128, 0, 0.1); /* Sombra verde suave */
+    margin-top: 24px;
+  }
+  
+  .edit-form h2 {
+    margin-bottom: 16px;
+    color: #1a3e1a; /* Verde oscuro */
+    font-size: 24px;
+    font-weight: 600;
+  }
+  
+  .edit-form label {
+    display: block;
+    margin-bottom: 8px;
+    color: #1a3e1a; /* Verde oscuro */
+    font-size: 14px;
+    font-weight: 600;
+  }
+  
+  .edit-form input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #d0e7d0; /* Borde verde claro */
+    border-radius: 8px;
+    background-color: #f0f8f0; /* Fondo verde claro */
+    color: #1a3e1a; /* Verde oscuro */
+    font-size: 14px;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .edit-form input:hover {
+    border-color: #228b22; /* Verde forestal */
+  }
+  
+  .edit-form input:focus {
+    border-color: #228b22; /* Verde forestal */
+    box-shadow: 0 0 0 3px rgba(34, 139, 34, 0.2); /* Sombra verde */
+    outline: none;
+  }
+  
+  .edit-form button {
+    padding: 8px 16px;
+    background-color: #228b22; /* Verde forestal */
+    border: none;
+    border-radius: 8px;
+    color: #ffffff; /* Texto blanco */
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .edit-form button:hover {
+    background-color: #1a6f1a; /* Verde más oscuro */
+  }
+
+  .logout-button1 {
+    position: fixed; /* Fija el botón en la pantalla */
+    bottom: 24px; /* Distancia desde la parte inferior */
+    right: 24px; /* Distancia desde la derecha */
+    padding: 12px 24px;
+    background-color: #228b22; /* Verde forestal */
+    border: none;
+    border-radius: 8px;
+    color: #ffffff; /* Texto blanco */
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 128, 0, 0.1); /* Sombra verde suave */
+    transition: background-color 0.3s ease, transform 0.3s ease;
+  }
+  
+  .logout-button1:hover {
+    background-color: #1a6f1a; /* Verde más oscuro */
+    transform: translateY(-2px); /* Efecto de elevación */
+  }
+  
+  .logout-button1:active {
+    transform: translateY(0); /* Restablece la posición al hacer clic */
+  }

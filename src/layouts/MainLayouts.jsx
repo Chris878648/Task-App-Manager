@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Layout, Menu, Button, Modal, Form, Input, Select, DatePicker, message } from 'antd';
 import { Link, useNavigate } from 'react-router-dom';
+import { getUsers, createTask, createGroup } from '../services/taskService'; 
+import { logout } from '../services/authService';
 import './MainLayout.css';
 
 const { Header, Sider, Content } = Layout;
@@ -14,119 +16,80 @@ const MainLayout = ({ children }) => {
   const [users, setUsers] = useState([]);
   const navigate = useNavigate();
 
+  // Obtener usuarios al cargar el componente
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:3001/get_users', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        if (response.ok) {
-          const usersData = await response.json();
-          setUsers(usersData);
-        } else {
-          console.error('Failed to fetch users');
-        }
+        const usersData = await getUsers();
+        setUsers(usersData);
       } catch (error) {
         console.error('Error fetching users:', error);
+        message.error('Failed to fetch users');
       }
     };
 
     fetchUsers();
   }, []);
 
+  // Mostrar modal de tarea
   const showTaskModal = () => {
     setIsTaskModalVisible(true);
   };
 
+  // Manejar la creación de una tarea
   const handleTaskOk = async () => {
     try {
       const values = await form.validateFields();
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:3001/tasks', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(values),
-      });
-
-      if (response.ok) {
-        message.success('Task added successfully!');
-        setIsTaskModalVisible(false);
-        form.resetFields();
-      } else {
-        const errorData = await response.json();
-        message.error(`Failed to add task: ${errorData.message}`);
-      }
+      await createTask(values); // Usar la función del servicio
+      message.success('Task added successfully!');
+      setIsTaskModalVisible(false);
+      form.resetFields();
     } catch (error) {
-      console.log('Validation failed:', error);
+      console.error('Error creating task:', error);
       message.error('Failed to add task');
     }
   };
 
+  // Cancelar modal de tarea
   const handleTaskCancel = () => {
     setIsTaskModalVisible(false);
     form.resetFields();
   };
 
+  // Mostrar modal de grupo
   const showGroupModal = () => {
     setIsGroupModalVisible(true);
   };
 
+  // Manejar la creación de un grupo
   const handleGroupOk = async () => {
     try {
       const values = await groupForm.validateFields();
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:3001/groups', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(values),
-      });
-
-      if (response.ok) {
-        message.success('Group created successfully!');
-        setIsGroupModalVisible(false);
-        groupForm.resetFields();
-      } else {
-        const errorData = await response.json();
-        message.error(`Failed to create group: ${errorData.message}`);
-      }
+      await createGroup(values); // Usar la función del servicio
+      message.success('Group created successfully!');
+      setIsGroupModalVisible(false);
+      groupForm.resetFields();
     } catch (error) {
-      console.log('Validation failed:', error);
+      console.error('Error creating group:', error);
       message.error('Failed to create group');
     }
   };
 
+  // Cancelar modal de grupo
   const handleGroupCancel = () => {
     setIsGroupModalVisible(false);
     groupForm.resetFields();
   };
 
+  // Manejar el cierre de sesión
   const handleLogout = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:3001/logout', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (response.ok) {
-        localStorage.removeItem('token');
-        navigate('/login');
-      } else {
-        console.error('Failed to logout');
-      }
+      await logout(); // Usar la función del servicio
+      localStorage.removeItem('token');
+      navigate('/login');
     } catch (error) {
       console.error('Error logging out:', error);
+      message.error('Failed to logout');
     }
   };
 

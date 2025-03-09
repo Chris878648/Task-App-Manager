@@ -1,6 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { Button, Modal, Form, Input, Select, DatePicker, message } from "antd";
 import "./DashboardPage.css";
+import {
+  getTasks,
+  getGroups,
+  getTasksByUser,
+  getGroupsByUser,
+  getGroupTasks,
+  updateTaskStatus,
+  createGroupTask,
+} from "../../services/taskService"; 
 
 const { Option } = Select;
 
@@ -16,129 +25,45 @@ const DashboardPage = () => {
   const userEmail = localStorage.getItem("email");
 
   useEffect(() => {
-    const fetchTasks = async () => {
+    const fetchData = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const response = await fetch("http://localhost:3001/get_tasks", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        if (response.ok) {
-          const tasksData = await response.json();
-          setTasks(tasksData);
-        } else {
-          console.error("Failed to fetch tasks");
-        }
+        const tasksData = await getTasks();
+        const groupsData = await getGroups();
+        const userTasksData = await getTasksByUser();
+        const userGroupsData = await getGroupsByUser();
+
+        setTasks(tasksData);
+        setGroups(groupsData);
+        setUserTasks(userTasksData);
+        setUserGroups(userGroupsData);
       } catch (error) {
-        console.error("Error fetching tasks:", error);
+        console.error("Error fetching data:", error);
       }
     };
 
-    const fetchGroups = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const response = await fetch("http://localhost:3001/get_groups", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        if (response.ok) {
-          const groupsData = await response.json();
-          setGroups(groupsData);
-        } else {
-          console.error("Failed to fetch groups");
-        }
-      } catch (error) {
-        console.error("Error fetching groups:", error);
-      }
-    };
+    fetchData();
 
-    const fetchUserTasks = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const response = await fetch("http://localhost:3001/get_tasks_byuser", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        if (response.ok) {
-          const userTasksData = await response.json();
-          setUserTasks(userTasksData);
-        } else {
-          console.error("Failed to fetch user tasks");
-        }
-      } catch (error) {
-        console.error("Error fetching user tasks:", error);
-      }
-    };
-
-    const fetchUserGroups = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const response = await fetch(
-          "http://localhost:3001/get_groups_byuser",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        if (response.ok) {
-          const userGroupsData = await response.json();
-          setUserGroups(userGroupsData);
-        } else {
-          console.error("Failed to fetch user groups");
-        }
-      } catch (error) {
-        console.error("Error fetching user groups:", error);
-      }
-    };
-
-    fetchTasks();
-    fetchGroups();
-    fetchUserTasks();
-    fetchUserGroups();
-
-    const intervalId = setInterval(() => {
-      fetchTasks();
-      fetchGroups();
-      fetchUserTasks();
-      fetchUserGroups();
-    }, 5000);
-
+    const intervalId = setInterval(fetchData, 5000);
     return () => clearInterval(intervalId);
   }, []);
 
-  const fetchGroupTasks = async (groupId) => {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(
-        `http://localhost:3001/groups/${groupId}/tasks`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      if (response.ok) {
-        const groupTasks = await response.json();
-        setTasks((prevTasks) => [...prevTasks, ...groupTasks]);
-      } else {
-        console.error("Failed to fetch group tasks");
-      }
-    } catch (error) {
-      console.error("Error fetching group tasks:", error);
-    }
-  };
-
   useEffect(() => {
-    groups.forEach((group) => {
-      fetchGroupTasks(group.id);
-    });
+    const fetchGroupTasksData = async () => {
+      try {
+        for (const group of groups) {
+          const groupTasks = await getGroupTasks(group.id);
+          setTasks((prevTasks) => [...prevTasks, ...groupTasks]);
+        }
+      } catch (error) {
+        console.error("Error fetching group tasks:", error);
+      }
+    };
+
+    if (groups.length > 0) {
+      fetchGroupTasksData();
+    }
   }, [groups]);
 
-  // Agrupar tareas por estado
   const groupedTasks = tasks.reduce((acc, task) => {
     if (!acc[task.status]) {
       acc[task.status] = [];
@@ -157,35 +82,19 @@ const DashboardPage = () => {
 
   const handleStatusChange = async (taskId, newStatus) => {
     try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(
-        `http://localhost:3001/tasks/${taskId}/status`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ status: newStatus }),
-        }
+      await updateTaskStatus(taskId, newStatus);
+      
+      setTasks((prevTasks) =>
+        prevTasks.map((task) =>
+          task.id === taskId ? { ...task, status: newStatus } : task
+        )
       );
-
-      if (response.ok) {
-        setTasks((prevTasks) =>
-          prevTasks.map((task) =>
-            task.id === taskId ? { ...task, status: newStatus } : task
-          )
-        );
-        setUserTasks((prevTasks) =>
-          prevTasks.map((task) =>
-            task.id === taskId ? { ...task, status: newStatus } : task
-          )
-        );
-        message.success("Task status updated successfully!");
-      } else {
-        console.error("Failed to update task status");
-        message.error("Failed to update task status");
-      }
+      setUserTasks((prevTasks) =>
+        prevTasks.map((task) =>
+          task.id === taskId ? { ...task, status: newStatus } : task
+        )
+      );
+      message.success("Task status updated successfully!");
     } catch (error) {
       console.error("Error updating task status:", error);
       message.error("Error updating task status");
@@ -200,27 +109,12 @@ const DashboardPage = () => {
   const handleOk = async () => {
     try {
       const values = await form.validateFields();
-      const token = localStorage.getItem("token");
-      const response = await fetch(
-        `http://localhost:3001/groups/${selectedGroup.id}/tasks`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(values),
-        }
-      );
-
-      if (response.ok) {
-        message.success("Task added successfully!");
-        setIsModalVisible(false);
-        form.resetFields();
-      } else {
-        const errorData = await response.json();
-        message.error(`Failed to add task: ${errorData.message}`);
-      }
+      
+      await createGroupTask(selectedGroup.id, values);
+      
+      message.success("Task added successfully!");
+      setIsModalVisible(false);
+      form.resetFields();
     } catch (error) {
       console.log("Validation failed:", error);
       message.error("Failed to add task");
@@ -232,10 +126,8 @@ const DashboardPage = () => {
     form.resetFields();
   };
 
-  // Estados para el tablero Kanban
   const statuses = ["In Progress", "Done", "Paused", "Revision"];
 
-  // Función para renderizar el tablero Kanban
   const renderKanbanBoard = (tasks) => {
     return (
       <div className="kanban-board">
@@ -245,7 +137,7 @@ const DashboardPage = () => {
             {tasks[status]?.map((task) => (
               <div key={task.id} className="task-card">
                 <h4>{task.name}</h4>
-                <p>Description:{task.description} </p>
+                <p>Description: {task.description}</p>
                 <p>Assigned to: {task.assignedTo}</p>
                 {task.assignedTo === userEmail && (
                   <select
@@ -271,7 +163,7 @@ const DashboardPage = () => {
 
   return (
     <div className="dashboard-container">
-      {/* Sección de Group Tasks */}
+      {/* Group Tasks Section */}
       <div className="section-container">
         <h2>Group Tasks</h2>
         {groups.map((group) => (
@@ -293,7 +185,7 @@ const DashboardPage = () => {
         ))}
       </div>
 
-      {/* Sección de My Tasks */}
+      {/* My Tasks Section */}
       <div className="section-container">
         <h2>My Tasks</h2>
         {renderKanbanBoard(
@@ -307,13 +199,13 @@ const DashboardPage = () => {
         )}
       </div>
 
-      {/* Sección de Assigned Tasks */}
+      {/* Assigned Tasks Section */}
       <div className="section-container">
         <h2>Assigned Tasks</h2>
         {renderKanbanBoard(groupedUserTasks)}
       </div>
 
-      {/* Modal para agregar tareas */}
+      {/* Add Task Modal */}
       <Modal
         title="Add Task"
         visible={isModalVisible}

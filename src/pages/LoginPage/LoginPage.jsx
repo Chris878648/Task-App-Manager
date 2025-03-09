@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Form, Input, Button, Typography, message } from 'antd';
 import { useNavigate } from 'react-router-dom';
-import '../LoginPage/LoginPage.css';
+import { login } from '../../services/authService';
+import './LoginPage.css';
 
 const { Title } = Typography;
 
@@ -13,23 +14,16 @@ const LoginPage = () => {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:3001/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(values),
-      });
+      const data = await login(values.email, values.password);
+      message.success('Login successful!');
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('email', data.email);
 
-      if (response.ok) {
-        const data = await response.json();
-        message.success('Login successful!');
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('email', data.email);
+      // Redirigir basado en el type devuelto
+      if (data.type === 1) {
         navigate('/dashboard');
-      } else {
-        const errorData = await response.json();
-        message.error(`Login failed: ${errorData.message}`);
+      } else if (data.type === 2) {
+        navigate('/admin');
       }
     } catch (error) {
       message.error(`Login failed: ${error.message}`);
@@ -44,8 +38,8 @@ const LoginPage = () => {
         <Title level={1} className="login-title">Login</Title>
         <Form name="login" onFinish={onFinish}>
           <Form.Item
-            name="username"
-            rules={[{ required: true, message: 'Por favor ingresa tu username!' }]}
+            name="email"
+            rules={[{ required: true, message: 'Por favor ingresa tu email!' }]}
           >
             <Input placeholder="Username" />
           </Form.Item>

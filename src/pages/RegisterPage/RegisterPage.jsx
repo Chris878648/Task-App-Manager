@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Form, Input, Button, Typography, message } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import '../LoginPage/LoginPage.css';
+import {register} from '../../services/authService';
 
 const { Title } = Typography;
 
@@ -12,28 +13,10 @@ const RegisterPage = () => {
   const onFinish = async (values) => {
     setLoading(true);
   
-    const newUser = {
-      username: values.username,
-      email: values.email,
-      password: values.password,
-    };
-
     try {
-      const response = await fetch('http://localhost:3001/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newUser),
-      });
-
-      if (response.ok) {
-        message.success('Registration successful!');
-        navigate('/login');
-      } else {
-        const errorData = await response.json();
-        message.error(`Registration failed: ${errorData.message}`);
-      }
+      const data = await register(values.username, values.email, values.password);
+      message.success('Registration successful!');
+      navigate('/login');
     } catch (error) {
       message.error(`Registration failed: ${error.message}`);
     } finally {

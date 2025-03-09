@@ -5,6 +5,9 @@ import LoginPage from './pages/LoginPage/LoginPage';
 import DashboardPage from './pages/Dashboard/DashboardPage';
 import MainLayout from './layouts/MainLayouts';
 import RegisterPage from './pages/RegisterPage/RegisterPage';
+import AdminPage from './pages/AdminPage/AdminPage';
+
+import ProtectedRoute from '../src/ProtectedRoute';
 
 
 function App() {
@@ -13,8 +16,9 @@ function App() {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/dashboard" element={<MainLayout><DashboardPage /></MainLayout>} />
+        <Route path="/dashboard" element={ <ProtectedRoute><MainLayout><DashboardPage /></MainLayout></ProtectedRoute>} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/admin" element={ <ProtectedRoute><AdminPage /></ProtectedRoute>} />
       </Routes>
     </Router>
   );

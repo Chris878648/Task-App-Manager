@@ -31,10 +31,11 @@ const db = getFirestore(app);
 
 // Crear un servidor Express
 const Api = express();
-const port = 3001;
+const port = process.env.PORT || 3001;
 
 Api.use(express.json());
 Api.use(cors()); // Habilitar CORS
+
 
 const SECRET_KEY = "HKAHS22SJX4223DXE";
 
@@ -50,6 +51,10 @@ const authenticateToken = (req, res, next) => {
     next();
   });
 };
+
+Api.get("/", (req, res) => {
+  res.status(200).json({ message: "API is working!" });
+});
 
 // Función para registrar un usuario
 Api.post("/register", async (req, res) => {
@@ -363,7 +368,12 @@ Api.patch("/update_user/:userId", authenticateToken, async (req, res) => {
   }
 });
 
-// Iniciar el servidor Express
-Api.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
-});
+// Para desarrollo local, puedes mantenerla así:
+if (process.env.NODE_ENV !== 'production') {
+  Api.listen(port, () => {
+    console.log(`Server is running on http://localhost:${port}`);
+  });
+}
+
+// Agrega esto al final de tu archivo
+module.exports = Api;

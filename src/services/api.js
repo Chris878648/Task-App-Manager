@@ -1,8 +1,6 @@
 import axios from "axios";
 
-const API_BASE_URL = window.location.hostname === "localhost" 
-  ? "http://localhost:3001" 
-  : "https://task-app-manager-seven.vercel.app";
+const API_BASE_URL = "https://taskappback-7lg5.onrender.com";
 
 const api = axios.create({
   baseURL: API_BASE_URL,

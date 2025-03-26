@@ -1,11 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import { Layout, Menu, Button, Modal, Form, Input, Select, DatePicker, message } from 'antd';
-import { Link, useNavigate } from 'react-router-dom';
-import { getUsers, createTask, createGroup } from '../services/taskService'; 
-import { logout } from '../services/authService';
-import './MainLayout.css';
-import { toast } from 'react-toastify';
-
+import React, { useState, useEffect } from "react";
+import {
+  Layout,
+  Menu,
+  Button,
+  Modal,
+  Form,
+  Input,
+  Select,
+  DatePicker,
+  message,
+} from "antd";
+import { Link, useNavigate } from "react-router-dom";
+import { getUsers, createTask, createGroup } from "../services/taskService";
+import { logout } from "../services/authService";
+import "./MainLayout.css";
+import { toast } from "react-toastify";
+import { PlusOutlined } from "@ant-design/icons"; 
 
 const { Header, Sider, Content } = Layout;
 const { Option } = Select;
@@ -25,8 +35,8 @@ const MainLayout = ({ children }) => {
         const usersData = await getUsers();
         setUsers(usersData);
       } catch (error) {
-        console.error('Error fetching users:', error);
-        message.error('Failed to fetch users');
+        console.error("Error fetching users:", error);
+        message.error("Failed to fetch users");
       }
     };
 
@@ -42,15 +52,15 @@ const MainLayout = ({ children }) => {
   const handleTaskOk = async () => {
     try {
       const values = await form.validateFields();
-      await createTask(values); // Usar la función del servicio
-      message.success('Task added successfully!');
-      toast.success('Task added successfully!');
+      await createTask(values); 
+      message.success("Task added successfully!");
+      toast.success("Task added successfully!");
       setIsTaskModalVisible(false);
       form.resetFields();
     } catch (error) {
-      console.error('Error creating task:', error);
-      message.error('Failed to add task');
-      toast.error('Failed to add task');
+      console.error("Error creating task:", error);
+      message.error("Failed to add task");
+      toast.error("Failed to add task");
     }
   };
 
@@ -69,15 +79,15 @@ const MainLayout = ({ children }) => {
   const handleGroupOk = async () => {
     try {
       const values = await groupForm.validateFields();
-      await createGroup(values); // Usar la función del servicio
-      message.success('Group created successfully!');
-      toast.success('Group created successfully!');
+      await createGroup(values); 
+      message.success("Group created successfully!");
+      toast.success("Group created successfully!");
       setIsGroupModalVisible(false);
       groupForm.resetFields();
     } catch (error) {
-      console.error('Error creating group:', error);
-      message.error('Failed to create group');
-      toast.error('Failed to create group');
+      console.error("Error creating group:", error);
+      message.error("Failed to create group");
+      toast.error("Failed to create group");
     }
   };
 
@@ -90,12 +100,12 @@ const MainLayout = ({ children }) => {
   // Manejar el cierre de sesión
   const handleLogout = async () => {
     try {
-      await logout(); // Usar la función del servicio
-      localStorage.removeItem('token');
-      navigate('/login');
+      await logout(); 
+      localStorage.removeItem("token");
+      navigate("/login");
     } catch (error) {
-      console.error('Error logging out:', error);
-      message.error('Failed to logout');
+      console.error("Error logging out:", error);
+      message.error("Failed to logout");
     }
   };
 
@@ -103,21 +113,29 @@ const MainLayout = ({ children }) => {
     <Layout className="main-layout">
       <Sider className="main-sider">
         <div className="logo" />
-        <Menu theme="dark" mode="inline" defaultSelectedKeys={['1']} className="main-menu">
+        <Menu
+          theme="dark"
+          mode="inline"
+          defaultSelectedKeys={["1"]}
+          className="main-menu"
+        >
           <Menu.Item key="1">
             <Link to="/dashboard">Dashboard</Link>
           </Menu.Item>
-          <Menu.Item key="2">
-            <Link to="/menu">Menu</Link>
-          </Menu.Item>
-          <Menu.Item key="3">
-            <Link to="/perfil">Perfil</Link>
-          </Menu.Item>
         </Menu>
-        <Button className="floating-button" type="primary" onClick={showTaskModal}>
-          Add Task
-        </Button>
-        <Button className="floating-button" type="primary" onClick={showGroupModal}>
+        <Button
+          className="floating-button"
+          type="primary"
+          shape="circle"
+          icon={<PlusOutlined />}
+          size="large"
+          onClick={showTaskModal}
+        />
+        <Button
+          className="floating-button22"
+          type="primary"
+          onClick={showGroupModal}
+        >
           Create Group
         </Button>
         <Button className="logout-button" type="primary" onClick={handleLogout}>
@@ -129,29 +147,47 @@ const MainLayout = ({ children }) => {
           <h1 className="header-title">Task Manager</h1>
         </Header>
         <Content className="main-content">
-          <div className="content-inner">
-            {children}
-          </div>
+          <div className="content-inner">{children}</div>
         </Content>
         <Modal
           title="Add Task"
           visible={isTaskModalVisible}
           onOk={handleTaskOk}
           onCancel={handleTaskCancel}
-          okButtonProps={{ className: 'modal-ok-button' }}
-          cancelButtonProps={{ className: 'modal-cancel-button' }}
+          okButtonProps={{ className: "modal-ok-button" }}
+          cancelButtonProps={{ className: "modal-cancel-button" }}
         >
           <Form form={form} layout="vertical">
-            <Form.Item name="name" label="Name Task" rules={[{ required: true, message: 'Please input the task name!' }]}>
+            <Form.Item
+              name="name"
+              label="Name Task"
+              rules={[
+                { required: true, message: "Please input the task name!" },
+              ]}
+            >
               <Input />
             </Form.Item>
-            <Form.Item name="description" label="Description" rules={[{ required: true, message: 'Please input the description!' }]}>
+            <Form.Item
+              name="description"
+              label="Description"
+              rules={[
+                { required: true, message: "Please input the description!" },
+              ]}
+            >
               <Input.TextArea />
             </Form.Item>
-            <Form.Item name="time" label="Time until finish / Remind me" rules={[{ required: true, message: 'Please select the time!' }]}>
+            <Form.Item
+              name="time"
+              label="Time until finish / Remind me"
+              rules={[{ required: true, message: "Please select the time!" }]}
+            >
               <DatePicker showTime />
             </Form.Item>
-            <Form.Item name="status" label="Status" rules={[{ required: true, message: 'Please select the status!' }]}>
+            <Form.Item
+              name="status"
+              label="Status"
+              rules={[{ required: true, message: "Please select the status!" }]}
+            >
               <Select>
                 <Option value="In Progress">In Progress</Option>
                 <Option value="Done">Done</Option>
@@ -159,7 +195,13 @@ const MainLayout = ({ children }) => {
                 <Option value="Revision">Revision</Option>
               </Select>
             </Form.Item>
-            <Form.Item name="category" label="Category" rules={[{ required: true, message: 'Please input the category!' }]}>
+            <Form.Item
+              name="category"
+              label="Category"
+              rules={[
+                { required: true, message: "Please input the category!" },
+              ]}
+            >
               <Input />
             </Form.Item>
           </Form>
@@ -169,16 +211,26 @@ const MainLayout = ({ children }) => {
           visible={isGroupModalVisible}
           onOk={handleGroupOk}
           onCancel={handleGroupCancel}
-          okButtonProps={{ className: 'modal-ok-button' }}
-          cancelButtonProps={{ className: 'modal-cancel-button' }}
+          okButtonProps={{ className: "modal-ok-button" }}
+          cancelButtonProps={{ className: "modal-cancel-button" }}
         >
           <Form form={groupForm} layout="vertical">
-            <Form.Item name="name" label="Group Name" rules={[{ required: true, message: 'Please input the group name!' }]}>
+            <Form.Item
+              name="name"
+              label="Group Name"
+              rules={[
+                { required: true, message: "Please input the group name!" },
+              ]}
+            >
               <Input />
             </Form.Item>
-            <Form.Item name="userEmails" label="Add Users" rules={[{ required: true, message: 'Please select users!' }]}>
+            <Form.Item
+              name="userEmails"
+              label="Add Users"
+              rules={[{ required: true, message: "Please select users!" }]}
+            >
               <Select mode="multiple" placeholder="Select users">
-                {users.map(user => (
+                {users.map((user) => (
                   <Option key={user.email} value={user.email}>
                     {user.email}
                   </Option>

@@ -100,7 +100,15 @@ export const updateTaskStatus = async (taskId, status) => {
   }
 };
 
-
+// Función para actualizar el estado de una tarea - Nueva va a GIT
+export const updateTaskStatus_Personal = async (taskId, status) => {
+  try {
+    const response = await api.patch(`/tasks_personal/${taskId}/status`, { status });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
 
 /////////////////////////////////////////////////////
 // Función para actualizar la información del usuario

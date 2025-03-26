@@ -1,5 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { Button, Modal, Form, Input, Select, DatePicker, message, Spin } from "antd";
+import {
+  Button,
+  Modal,
+  Form,
+  Input,
+  Select,
+  DatePicker,
+  message,
+  Spin,
+} from "antd";
 import "./DashboardPage.css";
 import {
   getTasks,
@@ -9,9 +18,9 @@ import {
   getGroupTasks,
   updateTaskStatus,
   createGroupTask,
+  updateTaskStatus_Personal,
 } from "../../services/taskService";
-import { toast } from 'react-toastify';
-
+import { toast } from "react-toastify";
 
 const { Option } = Select;
 
@@ -27,6 +36,7 @@ const DashboardPage = () => {
   const [form] = Form.useForm();
 
   const userEmail = localStorage.getItem("email");
+  const userId = localStorage.getItem("userId");
 
   // Función para obtener todos los datos
   const fetchData = async (isInitial = false) => {
@@ -109,9 +119,14 @@ const DashboardPage = () => {
     return () => clearInterval(intervalId);
   }, []);
 
-  const handleStatusChange = async (taskId, newStatus) => {
+  const handleStatusChange = async (taskId, newStatus, isPersonal) => {
     try {
-      await updateTaskStatus(taskId, newStatus);
+      if (isPersonal) {
+        await updateTaskStatus_Personal(taskId, newStatus);
+      } else {
+        await updateTaskStatus(taskId, newStatus);
+      }
+
       setTasks((prevTasks) =>
         prevTasks.map((task) =>
           task.id === taskId ? { ...task, status: newStatus } : task
@@ -123,12 +138,11 @@ const DashboardPage = () => {
         )
       );
       message.success("Task status updated successfully!");
-      toast.success('Task status updated successfully!');
-
+      toast.success("Task status updated successfully!");
     } catch (error) {
       console.error("Error updating task status:", error);
       message.error("Error updating task status");
-      toast.error('Error updating task status');
+      toast.error("Error updating task status");
     }
   };
 
@@ -142,7 +156,7 @@ const DashboardPage = () => {
       const values = await form.validateFields();
       await createGroupTask(selectedGroup.id, values);
       message.success("Task added successfully!");
-      toast.success('Task added successfully!');
+      toast.success("Task added successfully!");
       setIsModalVisible(false);
       form.resetFields();
 
@@ -165,7 +179,7 @@ const DashboardPage = () => {
 
   const statuses = ["In Progress", "Done", "Paused", "Revision"];
 
-  const renderKanbanBoard = (tasks) => {
+  const renderKanbanBoard = (tasks, isPersonal = false) => {
     return (
       <div className="kanban-board">
         {statuses.map((status) => (
@@ -175,12 +189,13 @@ const DashboardPage = () => {
               <div key={task.id} className="task-card">
                 <h4>{task.name}</h4>
                 <p>Description: {task.description}</p>
-                <p>Assigned to: {task.assignedTo}</p>
-                {task.assignedTo === userEmail && (
+                {!isPersonal && <p>Assigned to: {task.assignedTo}</p>}
+                {((isPersonal && task.userId === userId) ||
+                  task.assignedTo === userEmail) && (
                   <select
                     value={task.status}
                     onChange={(e) =>
-                      handleStatusChange(task.id, e.target.value)
+                      handleStatusChange(task.id, e.target.value, isPersonal)
                     }
                   >
                     {statuses.map((s) => (
@@ -236,7 +251,8 @@ const DashboardPage = () => {
                   if (!acc[task.status]) acc[task.status] = [];
                   acc[task.status].push(task);
                   return acc;
-                }, {})
+                }, {}),
+              true
             )}
           </div>
 
@@ -265,7 +281,9 @@ const DashboardPage = () => {
               <Form.Item
                 name="name"
                 label="Task Name"
-                rules={[{ required: true, message: "Please input the task name!" }]}
+                rules={[
+                  { required: true, message: "Please input the task name!" },
+                ]}
               >
                 <Input />
               </Form.Item>
@@ -288,7 +306,9 @@ const DashboardPage = () => {
               <Form.Item
                 name="status"
                 label="Status"
-                rules={[{ required: true, message: "Please select the status!" }]}
+                rules={[
+                  { required: true, message: "Please select the status!" },
+                ]}
               >
                 <Select>
                   {statuses.map((status) => (
@@ -301,7 +321,9 @@ const DashboardPage = () => {
               <Form.Item
                 name="category"
                 label="Category"
-                rules={[{ required: true, message: "Please input the category!" }]}
+                rules={[
+                  { required: true, message: "Please input the category!" },
+                ]}
               >
                 <Input />
               </Form.Item>

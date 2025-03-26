@@ -210,3 +210,46 @@
   border-color: #1abc9c; /* Borde verde turquesa */
   color: #1abc9c; /* Texto verde turquesa */
 }
+
+.floating-button {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background-color: #1abc9c; /* Botón verde turquesa */
+  border-color: #1abc9c;
+  color: #ffffff; /* Texto blanco */
+  border-radius: 50%; /* Hacer el botón circular */
+  width: 60px; /* Ancho fijo */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease; /* Transición suave */
+}
+
+.floating-button:hover {
+  background-color: #16a085 !important; /* Botón verde turquesa más oscuro */
+  border-color: #16a085;
+  transform: scale(1.05); /* Efecto de escala más sutil */
+}
+
+.floating-button22 {
+  background-color: #3498db; /* Botón azul */
+  border-color: #3498db;
+  color: #ffffff; /* Texto blanco */
+  border-radius: 8px; /* Bordes redondeados suaves */
+  width: 150px; /* Ancho fijo */
+  height: 40px; /* Altura fija */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  margin: 10px 16px; /* Espaciado entre botones */
+  transition: all 0.3s ease; /* Transición suave */
+}
+
+.floating-button22:hover {
+  background-color: #2980b9 !important; /* Botón azul más oscuro */
+  border-color: #2980b9;
+  transform: scale(1.05); /* Efecto de escala más sutil */
+}

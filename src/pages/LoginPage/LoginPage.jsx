@@ -19,6 +19,7 @@ const LoginPage = () => {
       toast.success('Login successful!');
       localStorage.setItem('token', data.token);
       localStorage.setItem('email', data.email);
+      localStorage.setItem('userId', data.userId);
 
       if (data.type === 1) {
         navigate('/dashboard');

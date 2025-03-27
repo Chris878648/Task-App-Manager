@@ -27,7 +27,7 @@ const LoginPage = () => {
         navigate('/admin');
       }
     } catch (error) {
-      if (error.response && error.response.status === 401) {
+      if (error.response && error.response.status === 400) {
         toast.error('Invalid username or password');
       } else {
         toast.error(`Login failed: ${error.message}`);

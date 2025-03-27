@@ -62,7 +62,7 @@ const LoginPage = () => {
         <Form name="login" onFinish={onFinish}>
           <Form.Item
             name="email"
-            rules={[{ required: true, message: 'Por favor ingresa tu email!' }]}
+            rules={[{ required: true, message: 'Por favor ingresa tu username!' }]}
           >
             <Input placeholder="Username" />
           </Form.Item>

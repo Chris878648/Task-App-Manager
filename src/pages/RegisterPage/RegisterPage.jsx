@@ -22,8 +22,13 @@ const RegisterPage = () => {
 
       navigate('/login');
     } catch (error) {
-      message.error(`Registration failed: ${error.message}`);
-      toast.error(`Registration failed: ${error.message}`);
+      if (error.response && error.response.status === 400) {
+        message.error("Username or Email are already in use, choose another.");
+        toast.error("Username or Email are already in use, choose another.");
+      } else {
+        message.error(`Registration failed: ${error.message}`);
+        toast.error(`Registration failed: ${error.message}`);
+      }
     } finally {
       setLoading(false);
     }

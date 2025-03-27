@@ -27,7 +27,11 @@ const LoginPage = () => {
         navigate('/admin');
       }
     } catch (error) {
-      toast.error(`Login failed: ${error.message}`);
+      if (error.response && error.response.status === 401) {
+        toast.error('Invalid username or password');
+      } else {
+        toast.error(`Login failed: ${error.message}`);
+      }
     } finally {
       setLoading(false);
     }

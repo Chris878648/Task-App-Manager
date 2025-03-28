@@ -119,12 +119,10 @@ const AdminPage = () => {
           </div>
           <div>
             <label>Role:</label>
-            <input
-              type="number"
-              name="type"
-              value={editingUser.type}
-              onChange={handleChange}
-            />
+            <select name="type" value={editingUser.type} onChange={handleChange}>
+                <option value="1">1</option>
+                <option value="2">2</option>
+            </select>
           </div>
           <button type="submit">Update User</button>
         </form>

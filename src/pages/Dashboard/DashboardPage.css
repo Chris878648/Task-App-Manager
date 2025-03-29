@@ -123,6 +123,7 @@
 .ant-btn-primary {
   background-color: #228b22 !important; /* Verde forestal */
   border-color: #228b22 !important;
+  margin-bottom: 20px; 
 }
 
 .ant-btn-primary:hover {

@@ -102,6 +102,7 @@ const MainLayout = ({ children }) => {
     try {
       await logout(); 
       localStorage.removeItem("token");
+      toast.success('Login successful!');
       navigate("/login");
     } catch (error) {
       console.error("Error logging out:", error);
